@@ -44,6 +44,7 @@ type Product struct {
 	Description string
 	Price       int
 	Category    string
+	Icon        string // bottle | jar | drop | tube
 }
 
 type Booking struct {
@@ -142,12 +143,12 @@ var (
 	}
 
 	products = []Product{
-		{ID: "sh1", Name: "Шампунь ежедневный", Description: "Мягкое очищение без пересушивания.", Price: 790, Category: "Волосы"},
-		{ID: "cd1", Name: "Кондиционер", Description: "Облегчает расчёсывание, придаёт блеск.", Price: 820, Category: "Волосы"},
-		{ID: "gl1", Name: "Глина матовая", Description: "Сильная фиксация, естественный вид.", Price: 950, Category: "Укладка"},
-		{ID: "pt1", Name: "Паста текстурная", Description: "Объём и подвижность на весь день.", Price: 890, Category: "Укладка"},
-		{ID: "bo1", Name: "Масло для бороды", Description: "Питает и смягчает. Древесный аромат.", Price: 1100, Category: "Борода"},
-		{ID: "bs1", Name: "Бальзам после бритья", Description: "Снимает раздражение, увлажняет.", Price: 720, Category: "Борода"},
+		{ID: "sh1", Name: "Шампунь ежедневный", Description: "Мягкое очищение без пересушивания.", Price: 790, Category: "Волосы", Icon: "bottle"},
+		{ID: "cd1", Name: "Кондиционер", Description: "Облегчает расчёсывание, придаёт блеск.", Price: 820, Category: "Волосы", Icon: "bottle"},
+		{ID: "gl1", Name: "Глина матовая", Description: "Сильная фиксация, естественный вид.", Price: 950, Category: "Укладка", Icon: "jar"},
+		{ID: "pt1", Name: "Паста текстурная", Description: "Объём и подвижность на весь день.", Price: 890, Category: "Укладка", Icon: "jar"},
+		{ID: "bo1", Name: "Масло для бороды", Description: "Питает и смягчает. Древесный аромат.", Price: 1100, Category: "Борода", Icon: "drop"},
+		{ID: "bs1", Name: "Бальзам после бритья", Description: "Снимает раздражение, увлажняет.", Price: 720, Category: "Борода", Icon: "tube"},
 	}
 )
 
@@ -207,18 +208,17 @@ func main() {
 			handleBookPost(w, r, app)
 			return
 		}
-		// GET — show booking page with optional preselect
 		master := r.URL.Query().Get("master")
 		service := r.URL.Query().Get("service")
 		data := map[string]any{
-			"Services":    services,
-			"Masters":     masters,
-			"PreMaster":   master,
-			"PreService":  service,
-			"Title":       "Запись — СЕВЕР",
-			"Today":       time.Now().Format("2006-01-02"),
-			"MinDate":     time.Now().Format("2006-01-02"),
-			"MaxDate":     time.Now().AddDate(0, 0, 21).Format("2006-01-02"),
+			"Services":   services,
+			"Masters":    masters,
+			"PreMaster":  master,
+			"PreService": service,
+			"Title":      "Запись — СЕВЕР",
+			"Today":      time.Now().Format("2006-01-02"),
+			"MinDate":    time.Now().Format("2006-01-02"),
+			"MaxDate":    time.Now().AddDate(0, 0, 21).Format("2006-01-02"),
 		}
 		if err := tmpl.ExecuteTemplate(w, "book.html", data); err != nil {
 			log.Println(err)
@@ -243,7 +243,6 @@ func main() {
 		}
 	})
 
-	// API
 	mux.HandleFunc("/api/slots", func(w http.ResponseWriter, r *http.Request) {
 		master := r.URL.Query().Get("master")
 		date := r.URL.Query().Get("date")
@@ -280,7 +279,6 @@ func main() {
 }
 
 func generateSlots(date string) []string {
-	// Working hours 10:00–20:00, slots every 30 min, skip lunch 14:00-15:00
 	var slots []string
 	start := 10 * 60
 	end := 20 * 60
@@ -292,11 +290,10 @@ func generateSlots(date string) []string {
 		mm := m % 60
 		slots = append(slots, fmt.Sprintf("%02d:%02d", h, mm))
 	}
-	// If today — filter past times
 	today := time.Now().Format("2006-01-02")
 	if date == today {
 		now := time.Now()
-		cutoff := now.Hour()*60 + now.Minute() + 30 // at least 30 min ahead
+		cutoff := now.Hour()*60 + now.Minute() + 30
 		var filtered []string
 		for _, s := range slots {
 			parts := strings.Split(s, ":")
@@ -332,7 +329,5 @@ func handleBookPost(w http.ResponseWriter, r *http.Request, app *App) {
 		http.Error(w, "это время уже занято, выберите другое", 409)
 		return
 	}
-
-	// Redirect to success
 	http.Redirect(w, r, "/my?phone="+b.Phone+"&ok=1", http.StatusSeeOther)
 }
