@@ -6,7 +6,8 @@
   <title>{{.Title}}</title>
   <meta name="description" content="Барбершоп СЕВЕР в Архангельске. Точные стрижки, спокойная атмосфера, онлайн-запись без суеты.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@500&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
@@ -23,7 +24,6 @@
   </header>
 
   <main>
-    <!-- HERO -->
     <section class="hero">
       <div class="hero-content">
         <p class="eyebrow">Архангельск · без спешки</p>
@@ -50,7 +50,6 @@
       </div>
     </section>
 
-    <!-- SERVICES -->
     <section id="services" class="section">
       <div class="section-head">
         <h2>Услуги</h2>
@@ -72,7 +71,6 @@
       </div>
     </section>
 
-    <!-- MASTERS -->
     <section id="masters" class="section alt">
       <div class="section-head">
         <h2>Мастера</h2>
@@ -91,28 +89,39 @@
       </div>
     </section>
 
-    <!-- PRODUCTS -->
     <section id="products" class="section">
       <div class="section-head">
         <h2>Уход</h2>
         <p>То, что реально используем сами. Можно забрать после визита.</p>
       </div>
-      <div class="products-grid">
+      <div class="products-gallery">
         {{range .Products}}
         <article class="product-card">
-          <div class="product-cat">{{.Category}}</div>
-          <h3>{{.Name}}</h3>
-          <p>{{.Description}}</p>
-          <div class="product-footer">
-            <span class="price">{{price .Price}}</span>
-            <span class="hint">при визите</span>
+          <div class="product-visual icon-{{.Icon}}" aria-hidden="true">
+            {{if eq .Icon "bottle"}}
+            <svg viewBox="0 0 64 80" fill="none"><rect x="22" y="4" width="20" height="10" rx="2" stroke="currentColor" stroke-width="2"/><path d="M18 14h28v6H18z" stroke="currentColor" stroke-width="2"/><rect x="16" y="20" width="32" height="52" rx="6" stroke="currentColor" stroke-width="2"/><path d="M24 36h16M24 46h16M24 56h10" stroke="currentColor" stroke-width="1.5" opacity=".5"/></svg>
+            {{else if eq .Icon "jar"}}
+            <svg viewBox="0 0 64 80" fill="none"><rect x="14" y="8" width="36" height="12" rx="3" stroke="currentColor" stroke-width="2"/><rect x="12" y="20" width="40" height="48" rx="8" stroke="currentColor" stroke-width="2"/><circle cx="32" cy="44" r="10" stroke="currentColor" stroke-width="1.5" opacity=".4"/></svg>
+            {{else if eq .Icon "drop"}}
+            <svg viewBox="0 0 64 80" fill="none"><path d="M32 8c0 0-16 22-16 36a16 16 0 0032 0C48 30 32 8 32 8z" stroke="currentColor" stroke-width="2"/><path d="M32 28v20M24 40h16" stroke="currentColor" stroke-width="1.5" opacity=".45"/></svg>
+            {{else}}
+            <svg viewBox="0 0 64 80" fill="none"><rect x="20" y="6" width="24" height="10" rx="2" stroke="currentColor" stroke-width="2"/><path d="M18 16h28l4 52H14L18 16z" stroke="currentColor" stroke-width="2"/><path d="M26 30h12M26 42h12" stroke="currentColor" stroke-width="1.5" opacity=".45"/></svg>
+            {{end}}
+          </div>
+          <div class="product-body">
+            <div class="product-cat">{{.Category}}</div>
+            <h3>{{.Name}}</h3>
+            <p>{{.Description}}</p>
+            <div class="product-footer">
+              <span class="price">{{price .Price}}</span>
+              <span class="hint">при визите</span>
+            </div>
           </div>
         </article>
         {{end}}
       </div>
     </section>
 
-    <!-- ABOUT -->
     <section class="section about">
       <div class="about-grid">
         <div>
