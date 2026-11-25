@@ -184,8 +184,13 @@
         <p>Архангельск · барбершоп</p>
       </div>
       <div>
-        <p>Запись онлайн или через Telegram</p>
-        <a href="/book" class="btn small primary">Записаться</a>
+        <p>Запись онлайн{{if .TelegramURL}} или в Telegram{{end}}</p>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:8px">
+          <a href="/book" class="btn small primary">Записаться</a>
+          {{if .TelegramURL}}
+          <a href="{{.TelegramURL}}" class="btn small ghost" target="_blank" rel="noopener">Telegram</a>
+          {{end}}
+        </div>
       </div>
     </div>
     <p class="copy">© 2026 СЕВЕР. Сайт на Go.</p>
