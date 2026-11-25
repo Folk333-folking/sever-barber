@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{.Title}}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <header class="header">
+    <a href="/" class="logo">СЕВЕР</a>
+    <nav>
+      <a href="/">Главная</a>
+      <a href="/book">Записаться</a>
+    </nav>
+  </header>
+
+  <main class="book-page">
+    <div class="book-wrap">
+      <h1>Мои записи</h1>
+      {{if .Phone}}
+        <p class="lead">Записи для номера {{.Phone}}</p>
+      {{else}}
+        <p class="lead">Введите телефон, чтобы увидеть свои записи.</p>
+      {{end}}
+
+      <form action="/my" method="get" class="phone-form">
+        <label>
+          Телефон
+          <input type="tel" name="phone" value="{{.Phone}}" placeholder="+7 9XX XXX-XX-XX" required>
+        </label>
+        <button type="submit" class="btn primary">Показать</button>
+      </form>
+
+      {{if .Bookings}}
+      <ul class="booking-list">
+        {{range .Bookings}}
+        <li class="booking-item">
+          <div class="booking-date">
+            <strong>{{.Date}}</strong>
+            <span>{{.Time}}</span>
+          </div>
+          <div class="booking-info">
+            <div>{{(findMaster .MasterID).Name}} · {{(findService .ServiceID).Name}}</div>
+            <small>{{.Name}} · {{.Phone}}</small>
+          </div>
+          <div class="booking-id">{{.ID}}</div>
+        </li>
+        {{end}}
+      </ul>
+      {{else if .Phone}}
+      <p class="muted">Записей не найдено. <a href="/book">Записаться</a></p>
+      {{end}}
+    </div>
+  </main>
+</body>
+</html>
