@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"embed"
 	"encoding/json"
 	"fmt"
@@ -8,6 +9,7 @@ import (
 	"io/fs"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
 	"sort"
 	"strconv"
@@ -178,24 +180,23 @@ func main() {
 
 	mux := http.NewServeMux()
 
-	// Static (embed keeps "static/..." paths, so we Sub first)
 	staticContent, err := fs.Sub(staticFS, "static")
 	if err != nil {
 		log.Fatal(err)
 	}
 	mux.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.FS(staticContent))))
 
-	// Pages
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path != "/" {
 			http.NotFound(w, r)
 			return
 		}
 		data := map[string]any{
-			"Services": services,
-			"Masters":  masters,
-			"Products": products,
-			"Title":    "СЕВЕР — барбершоп",
+			"Services":    services,
+			"Masters":     masters,
+			"Products":    products,
+			"Title":       "СЕВЕР — барбершоп",
+			"TelegramURL": telegramBotURL(),
 		}
 		if err := tmpl.ExecuteTemplate(w, "index.html", data); err != nil {
 			log.Println(err)
@@ -211,14 +212,15 @@ func main() {
 		master := r.URL.Query().Get("master")
 		service := r.URL.Query().Get("service")
 		data := map[string]any{
-			"Services":   services,
-			"Masters":    masters,
-			"PreMaster":  master,
-			"PreService": service,
-			"Title":      "Запись — СЕВЕР",
-			"Today":      time.Now().Format("2006-01-02"),
-			"MinDate":    time.Now().Format("2006-01-02"),
-			"MaxDate":    time.Now().AddDate(0, 0, 21).Format("2006-01-02"),
+			"Services":    services,
+			"Masters":     masters,
+			"PreMaster":   master,
+			"PreService":  service,
+			"Title":       "Запись — СЕВЕР",
+			"Today":       time.Now().Format("2006-01-02"),
+			"MinDate":     time.Now().Format("2006-01-02"),
+			"MaxDate":     time.Now().AddDate(0, 0, 21).Format("2006-01-02"),
+			"TelegramURL": telegramBotURL(),
 		}
 		if err := tmpl.ExecuteTemplate(w, "book.html", data); err != nil {
 			log.Println(err)
@@ -275,6 +277,11 @@ func main() {
 	}
 	addr := ":" + port
 	log.Printf("СЕВЕР barbershop listening on %s", addr)
+	if telegramEnabled() {
+		log.Println("Telegram notifications: enabled")
+	} else {
+		log.Println("Telegram notifications: off (set TELEGRAM_BOT_TOKEN + TELEGRAM_CHAT_ID)")
+	}
 	log.Fatal(http.ListenAndServe(addr, mux))
 }
 
@@ -308,6 +315,89 @@ func generateSlots(date string) []string {
 	return slots
 }
 
+func telegramEnabled() bool {
+	return os.Getenv("TELEGRAM_BOT_TOKEN") != "" && os.Getenv("TELEGRAM_CHAT_ID") != ""
+}
+
+func notifyTelegram(b Booking) {
+	token := os.Getenv("TELEGRAM_BOT_TOKEN")
+	chatID := os.Getenv("TELEGRAM_CHAT_ID")
+	if token == "" || chatID == "" {
+		return
+	}
+
+	master := findMasterName(b.MasterID)
+	service := findServiceName(b.ServiceID)
+
+	text := fmt.Sprintf(
+		"✂️ <b>Новая запись</b>\n\n"+
+			"👤 %s\n"+
+			"📞 %s\n"+
+			"🗓 %s в %s\n"+
+			"💇 %s\n"+
+			"🧔 %s\n"+
+			"🆔 <code>%s</code>",
+		htmlEscape(b.Name),
+		htmlEscape(b.Phone),
+		b.Date, b.Time,
+		htmlEscape(service),
+		htmlEscape(master),
+		b.ID,
+	)
+
+	apiURL := fmt.Sprintf("https://api.telegram.org/bot%s/sendMessage", token)
+	form := url.Values{}
+	form.Set("chat_id", chatID)
+	form.Set("text", text)
+	form.Set("parse_mode", "HTML")
+
+	resp, err := http.PostForm(apiURL, form)
+	if err != nil {
+		log.Println("telegram notify:", err)
+		return
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode >= 300 {
+		buf := new(bytes.Buffer)
+		buf.ReadFrom(resp.Body)
+		log.Println("telegram error:", resp.StatusCode, buf.String())
+	}
+}
+
+func findMasterName(id string) string {
+	for _, m := range masters {
+		if m.ID == id {
+			return m.Name
+		}
+	}
+	return id
+}
+
+func findServiceName(id string) string {
+	for _, s := range services {
+		if s.ID == id {
+			return s.Name
+		}
+	}
+	return id
+}
+
+func htmlEscape(s string) string {
+	s = strings.ReplaceAll(s, "&", "&amp;")
+	s = strings.ReplaceAll(s, "<", "&lt;")
+	s = strings.ReplaceAll(s, ">", "&gt;")
+	return s
+}
+
+func telegramBotURL() string {
+	u := os.Getenv("TELEGRAM_BOT_USERNAME")
+	if u == "" {
+		return ""
+	}
+	u = strings.TrimPrefix(u, "@")
+	return "https://t.me/" + u
+}
+
 func handleBookPost(w http.ResponseWriter, r *http.Request, app *App) {
 	if err := r.ParseForm(); err != nil {
 		http.Error(w, "bad form", 400)
@@ -329,5 +419,8 @@ func handleBookPost(w http.ResponseWriter, r *http.Request, app *App) {
 		http.Error(w, "это время уже занято, выберите другое", 409)
 		return
 	}
-	http.Redirect(w, r, "/my?phone="+b.Phone+"&ok=1", http.StatusSeeOther)
+
+	go notifyTelegram(b)
+
+	http.Redirect(w, r, "/my?phone="+url.QueryEscape(b.Phone)+"&ok=1", http.StatusSeeOther)
 }
