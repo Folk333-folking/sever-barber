@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{.Title}}</title>
+  <meta name="description" content="Барбершоп СЕВЕР в Архангельске. Точные стрижки, спокойная атмосфера, онлайн-запись без суеты.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <header class="header">
+    <a href="/" class="logo">СЕВЕР</a>
+    <nav>
+      <a href="#services">Услуги</a>
+      <a href="#masters">Мастера</a>
+      <a href="#products">Уход</a>
+      <a href="/my">Мои записи</a>
+      <a href="/book" class="nav-cta">Записаться</a>
+    </nav>
+    <button class="menu-btn" aria-label="Меню" onclick="document.body.classList.toggle('nav-open')">☰</button>
+  </header>
+
+  <main>
+    <!-- HERO -->
+    <section class="hero">
+      <div class="hero-content">
+        <p class="eyebrow">Архангельск · без спешки</p>
+        <h1>Стрижка<br>как ритуал.</h1>
+        <p class="lead">Мы не продаём лишнее. Выбираете мастера и время — остальное берём на себя.</p>
+        <div class="hero-actions">
+          <a href="/book" class="btn primary">Записаться онлайн</a>
+          <a href="#masters" class="btn ghost">Выбрать мастера</a>
+        </div>
+      </div>
+      <div class="hero-aside">
+        <div class="stat">
+          <span class="stat-num">45</span>
+          <span class="stat-label">мин средняя стрижка</span>
+        </div>
+        <div class="stat">
+          <span class="stat-num">3</span>
+          <span class="stat-label">мастера</span>
+        </div>
+        <div class="stat">
+          <span class="stat-num">0</span>
+          <span class="stat-label">навязанных услуг</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- SERVICES -->
+    <section id="services" class="section">
+      <div class="section-head">
+        <h2>Услуги</h2>
+        <p>Прозрачные цены. Без «а давайте ещё вот это».</p>
+      </div>
+      <div class="service-list">
+        {{range .Services}}
+        <a href="/book?service={{.ID}}" class="service-row">
+          <div class="service-main">
+            <strong>{{.Name}}</strong>
+            <span>{{.Description}}</span>
+          </div>
+          <div class="service-meta">
+            <span class="price">{{price .Price}}</span>
+            <span class="dur">{{.Duration}} мин</span>
+          </div>
+        </a>
+        {{end}}
+      </div>
+    </section>
+
+    <!-- MASTERS -->
+    <section id="masters" class="section alt">
+      <div class="section-head">
+        <h2>Мастера</h2>
+        <p>Каждый — свой характер. Выберите того, с кем комфортно.</p>
+      </div>
+      <div class="masters-grid">
+        {{range .Masters}}
+        <article class="master-card">
+          <div class="avatar">{{.Initials}}</div>
+          <h3>{{.Name}}</h3>
+          <p class="role">{{.Role}}</p>
+          <p class="bio">{{.Bio}}</p>
+          <a href="/book?master={{.ID}}" class="btn small">К этому мастеру</a>
+        </article>
+        {{end}}
+      </div>
+    </section>
+
+    <!-- PRODUCTS -->
+    <section id="products" class="section">
+      <div class="section-head">
+        <h2>Уход</h2>
+        <p>То, что реально используем сами. Можно забрать после визита.</p>
+      </div>
+      <div class="products-grid">
+        {{range .Products}}
+        <article class="product-card">
+          <div class="product-cat">{{.Category}}</div>
+          <h3>{{.Name}}</h3>
+          <p>{{.Description}}</p>
+          <div class="product-footer">
+            <span class="price">{{price .Price}}</span>
+            <span class="hint">при визите</span>
+          </div>
+        </article>
+        {{end}}
+      </div>
+    </section>
+
+    <!-- ABOUT -->
+    <section class="section about">
+      <div class="about-grid">
+        <div>
+          <h2>Почему СЕВЕР</h2>
+          <p>Мы открылись, чтобы в городе был место, где можно прийти без давления. Стрижка начинается с разговора: как вы живёте, что вам идёт, чего хотите избежать.</p>
+          <p>Никаких «сегодня акция на всё». Только то, что нужно.</p>
+        </div>
+        <ul class="principles">
+          <li><strong>Время</strong> — слот ваш целиком, без перегруза</li>
+          <li><strong>Форма</strong> — под лицо и образ жизни</li>
+          <li><strong>Честность</strong> — скажем, если что-то не стоит делать</li>
+        </ul>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      <div>
+        <a href="/" class="logo">СЕВЕР</a>
+        <p>Архангельск · барбершоп</p>
+      </div>
+      <div>
+        <p>Запись онлайн или через Telegram</p>
+        <a href="/book" class="btn small primary">Записаться</a>
+      </div>
+    </div>
+    <p class="copy">© 2026 СЕВЕР. Сайт на Go.</p>
+  </footer>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

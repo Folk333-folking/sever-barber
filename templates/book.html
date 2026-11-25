@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{.Title}}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <header class="header">
+    <a href="/" class="logo">СЕВЕР</a>
+    <nav>
+      <a href="/">Главная</a>
+      <a href="/my">Мои записи</a>
+    </nav>
+  </header>
+
+  <main class="book-page">
+    <div class="book-wrap">
+      <h1>Запись</h1>
+      <p class="lead">Выберите мастера, услугу и свободное время. Подтверждение — сразу.</p>
+
+      <form id="book-form" action="/book" method="post" class="book-form">
+        <fieldset>
+          <legend>1 · Мастер</legend>
+          <div class="radio-grid">
+            {{range .Masters}}
+            <label class="radio-card">
+              <input type="radio" name="master" value="{{.ID}}" {{if eq $.PreMaster .ID}}checked{{end}} required>
+              <span class="avatar sm">{{.Initials}}</span>
+              <span>
+                <strong>{{.Name}}</strong>
+                <small>{{.Role}}</small>
+              </span>
+            </label>
+            {{end}}
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend>2 · Услуга</legend>
+          <div class="radio-grid">
+            {{range .Services}}
+            <label class="radio-card service">
+              <input type="radio" name="service" value="{{.ID}}" {{if eq $.PreService .ID}}checked{{end}} required>
+              <span>
+                <strong>{{.Name}}</strong>
+                <small>{{.Duration}} мин · {{price .Price}}</small>
+              </span>
+            </label>
+            {{end}}
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend>3 · Дата и время</legend>
+          <div class="date-row">
+            <label>
+              Дата
+              <input type="date" name="date" id="date" min="{{.MinDate}}" max="{{.MaxDate}}" value="{{.Today}}" required>
+            </label>
+          </div>
+          <div id="slots" class="slots">
+            <p class="muted">Сначала выберите мастера и дату</p>
+          </div>
+          <input type="hidden" name="time" id="time" required>
+        </fieldset>
+
+        <fieldset>
+          <legend>4 · Контакты</legend>
+          <label>
+            Имя
+            <input type="text" name="name" placeholder="Как к вам обращаться" required autocomplete="name">
+          </label>
+          <label>
+            Телефон
+            <input type="tel" name="phone" placeholder="+7 9XX XXX-XX-XX" required autocomplete="tel">
+          </label>
+        </fieldset>
+
+        <button type="submit" class="btn primary full">Подтвердить запись</button>
+      </form>
+    </div>
+  </main>
+
+  <script src="/static/app.js"></script>
+  <script>
+    // Booking-specific
+    const form = document.getElementById('book-form');
+    const dateInput = document.getElementById('date');
+    const slotsEl = document.getElementById('slots');
+    const timeInput = document.getElementById('time');
+
+    function selectedMaster() {
+      const r = form.querySelector('input[name="master"]:checked');
+      return r ? r.value : '';
+    }
+
+    async function loadSlots() {
+      const master = selectedMaster();
+      const date = dateInput.value;
+      if (!master || !date) {
+        slotsEl.innerHTML = '<p class="muted">Сначала выберите мастера и дату</p>';
+        return;
+      }
+      slotsEl.innerHTML = '<p class="muted">Загрузка…</p>';
+      try {
+        const res = await fetch(`/api/slots?master=${encodeURIComponent(master)}&date=${encodeURIComponent(date)}`);
+        const data = await res.json();
+        if (!data.slots || data.slots.length === 0) {
+          slotsEl.innerHTML = '<p class="muted">На эту дату свободных слотов нет</p>';
+          timeInput.value = '';
+          return;
+        }
+        slotsEl.innerHTML = data.slots.map(t =>
+          `<button type="button" class="slot" data-time="${t}">${t}</button>`
+        ).join('');
+        slotsEl.querySelectorAll('.slot').forEach(btn => {
+          btn.addEventListener('click', () => {
+            slotsEl.querySelectorAll('.slot').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            timeInput.value = btn.dataset.time;
+          });
+        });
+      } catch (e) {
+        slotsEl.innerHTML = '<p class="muted">Ошибка загрузки слотов</p>';
+      }
+    }
+
+    form.querySelectorAll('input[name="master"]').forEach(r => r.addEventListener('change', loadSlots));
+    dateInput.addEventListener('change', loadSlots);
+    // initial if preselected
+    if (selectedMaster()) loadSlots();
+  </script>
+</body>
+</html>
