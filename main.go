@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"html/template"
+	"io/fs"
 	"log"
 	"net/http"
 	"os"
@@ -176,8 +177,12 @@ func main() {
 
 	mux := http.NewServeMux()
 
-	// Static
-	mux.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.FS(staticFS))))
+	// Static (embed keeps "static/..." paths, so we Sub first)
+	staticContent, err := fs.Sub(staticFS, "static")
+	if err != nil {
+		log.Fatal(err)
+	}
+	mux.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.FS(staticContent))))
 
 	// Pages
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
