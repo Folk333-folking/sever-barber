@@ -82,6 +82,12 @@
         </fieldset>
 
         <button type="submit" class="btn primary full">Подтвердить запись</button>
+        {{if .TelegramURL}}
+        <p class="muted" style="margin-top:20px;text-align:center">
+          Или запишитесь в Telegram:<br>
+          <a href="{{.TelegramURL}}" target="_blank" rel="noopener" style="color:var(--accent)">{{.TelegramURL}}</a>
+        </p>
+        {{end}}
       </form>
     </div>
   </main>
