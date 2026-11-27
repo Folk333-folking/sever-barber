@@ -29,7 +29,7 @@ type Service struct {
 	Name        string
 	Description string
 	Price       int
-	Duration    int // minutes
+	Duration    int
 }
 
 type Master struct {
@@ -46,15 +46,15 @@ type Product struct {
 	Description string
 	Price       int
 	Category    string
-	Icon        string // bottle | jar | drop | tube
+	Icon        string
 }
 
 type Booking struct {
 	ID        string
 	MasterID  string
 	ServiceID string
-	Date      string // YYYY-MM-DD
-	Time      string // HH:MM
+	Date      string
+	Time      string
 	Name      string
 	Phone     string
 	Created   time.Time
@@ -62,7 +62,7 @@ type Booking struct {
 
 type App struct {
 	mu       sync.RWMutex
-	bookings map[string]Booking // key = masterID|date|time
+	bookings map[string]Booking
 	seq      int
 }
 
@@ -319,6 +319,17 @@ func telegramEnabled() bool {
 	return os.Getenv("TELEGRAM_BOT_TOKEN") != "" && os.Getenv("TELEGRAM_CHAT_ID") != ""
 }
 
+func formatRuDate(dateStr string) string {
+	t, err := time.Parse("2006-01-02", dateStr)
+	if err != nil {
+		return dateStr
+	}
+	months := []string{"", "января", "февраля", "марта", "апреля", "мая", "июня",
+		"июля", "августа", "сентября", "октября", "ноября", "декабря"}
+	weekdays := []string{"воскресенье", "понедельник", "вторник", "среда", "четверг", "пятница", "суббота"}
+	return fmt.Sprintf("%d %s (%s)", t.Day(), months[int(t.Month())], weekdays[t.Weekday()])
+}
+
 func notifyTelegram(b Booking) {
 	token := os.Getenv("TELEGRAM_BOT_TOKEN")
 	chatID := os.Getenv("TELEGRAM_CHAT_ID")
@@ -328,18 +339,26 @@ func notifyTelegram(b Booking) {
 
 	master := findMasterName(b.MasterID)
 	service := findServiceName(b.ServiceID)
+	dateRu := formatRuDate(b.Date)
 
 	text := fmt.Sprintf(
-		"✂️ <b>Новая запись</b>\n\n"+
-			"👤 %s\n"+
-			"📞 %s\n"+
-			"🗓 %s в %s\n"+
-			"💇 %s\n"+
-			"🧔 %s\n"+
-			"🆔 <code>%s</code>",
+		"┌─────────────────────\n"+
+			"│  <b>СЕВЕР</b> · новая запись\n"+
+			"└─────────────────────\n\n"+
+			"<b>%s</b>\n"+
+			"%s · %s\n\n"+
+			"━━━━━━━━━━━━━━━━━━━━\n"+
+			"👤  <b>%s</b>\n"+
+			"📞  <code>%s</code>\n"+
+			"✂️  %s\n"+
+			"🧔  мастер %s\n"+
+			"━━━━━━━━━━━━━━━━━━━━\n\n"+
+			"<i>id</i> <code>%s</code>",
+		dateRu,
+		b.Time,
+		htmlEscape(service),
 		htmlEscape(b.Name),
 		htmlEscape(b.Phone),
-		b.Date, b.Time,
 		htmlEscape(service),
 		htmlEscape(master),
 		b.ID,
