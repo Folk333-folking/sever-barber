@@ -271,6 +271,8 @@ func main() {
 		handleBookPost(w, r, app)
 	})
 
+	mux.HandleFunc("/telegram/webhook", handleTelegramWebhook(app))
+
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
@@ -279,9 +281,8 @@ func main() {
 	log.Printf("СЕВЕР barbershop listening on %s", addr)
 	if telegramEnabled() {
 		log.Println("Telegram notifications: enabled")
-	} else {
-		log.Println("Telegram notifications: off (set TELEGRAM_BOT_TOKEN + TELEGRAM_CHAT_ID)")
 	}
+	setupTelegramWebhook()
 	log.Fatal(http.ListenAndServe(addr, mux))
 }
 
