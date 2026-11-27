@@ -8,7 +8,7 @@
 - **Отдельная страница записи** с пошаговой формой.
 - **Живые слоты** через API.
 - **Мои записи** по номеру телефона.
-- **Telegram**: уведомление владельцу о новой записи.
+- **Telegram**: уведомления + запись через бота.
 
 ## Запуск локально
 
@@ -26,16 +26,25 @@ go run .
 
 ## Telegram
 
-При новой записи сайт шлёт уведомление владельцу.
+При новой записи (с сайта или из бота) владелец получает уведомление.
 
-1. Создай бота у [@BotFather](https://t.me/BotFather) → получи токен.
-2. Напиши боту `/start`, затем узнай свой `chat_id` через `@userinfobot` или `https://api.telegram.org/bot<TOKEN>/getUpdates`.
-3. В Render → Environment добавь:
+1. Создай бота у [@BotFather](https://t.me/BotFather) → токен.
+2. Напиши боту `/start`, узнай `chat_id` через `@userinfobot` или getUpdates.
+3. В Render → Environment:
 
 ```
 TELEGRAM_BOT_TOKEN=123456:ABC...
 TELEGRAM_CHAT_ID=123456789
-TELEGRAM_BOT_USERNAME=sever_barber_bot
+TELEGRAM_BOT_USERNAME=SeverBarber29Bot
+WEBHOOK_BASE_URL=https://sever-barber.onrender.com
 ```
 
 `TELEGRAM_BOT_USERNAME` — без `@`, для ссылки на сайте.
+
+Для записи **через бота** добавь:
+
+```
+WEBHOOK_BASE_URL=https://sever-barber.onrender.com
+```
+
+После деплоя бот сам зарегистрирует webhook. Клиент пишет `/start` → выбирает мастера, услугу, день, время → имя и телефон.
